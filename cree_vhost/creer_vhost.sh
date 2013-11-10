@@ -33,7 +33,7 @@
 
 
 #	-------------------------------------------------------------------
-#	Constantes dependantes de la conf du serveur
+#	parametrages dependants de la conf du serveur
 #	-------------------------------------------------------------------
   # le programme
 	PROGNAME=$(basename $0)
@@ -82,53 +82,39 @@
 #	-------------------------------------------------------------------
 
 
-function clean_up
-{
-#	-----------------------------------------------------------------------
 #	Function to remove temporary files and other housekeeping
 #		No arguments
-#	-----------------------------------------------------------------------
-
+function clean_up
+{
 	rm -f ${TEMP_FILE1}
 }
 
 
-function error_exit
-{
-
-#	-----------------------------------------------------------------------
 #	Function for exit due to fatal program error
 #		Accepts 1 argument:
 #			string containing descriptive error message
-#	-----------------------------------------------------------------------
-
+function error_exit
+{
 	echo "${PROGNAME}: ${1:-"Unknown Error"}" >&2
 	clean_up
 	exit 1
 }
 
 
-function graceful_exit
-{
-#	-----------------------------------------------------------------------
 #	Function called for a graceful exit
 #		No arguments
-#	-----------------------------------------------------------------------
-
+function graceful_exit
+{
 	clean_up
 	exit
 }
 
 
-function signal_exit
-{
-
-#	-----------------------------------------------------------------------
 #	Function to handle termination signals
 #		Accepts 1 argument:
 #			signal_spec
-#	-----------------------------------------------------------------------
-
+function signal_exit
+{
 	case $1 in
 		INT)	echo "$PROGNAME: Programme abandonne par l'utilisateur" >&2
 			clean_up
@@ -144,14 +130,10 @@ function signal_exit
 }
 
 
-function make_temp_files
-{
-
-#	-----------------------------------------------------------------------
 #	Function to create temporary files
 #		No arguments
-#	-----------------------------------------------------------------------
-
+function make_temp_files
+{
 	# Use user's local tmp directory if it exists
 
 	if [ -d ~/tmp ]; then
@@ -172,26 +154,18 @@ function make_temp_files
 }
 
 
-function usage
-{
-
-#	-----------------------------------------------------------------------
 #	Function to display usage message (does not exit)
 #		No arguments
-#	-----------------------------------------------------------------------
-
+function usage
+{
 	echo "Usage: ${PROGNAME} [-h | --help] [-d ndd] [-n numero] [-u unix_user] [-s mysql_user] [-p mysql_pass] [-b mysql_base] [-q  mysql_nb] [-m mail_responsable] [-a creer_awstats] [-i init_mutu]"
 }
 
 
-function helptext
-{
-
-#	-----------------------------------------------------------------------
 #	Function to display help message for program
 #		No arguments
-#	-----------------------------------------------------------------------
-
+function helptext
+{
 	local tab=$(echo -en "\t\t")
 
 	cat <<- -EOF-
@@ -222,26 +196,22 @@ function helptext
 }
 
 
+#	Function to check if user is root
+#	No arguments
 function root_check
 {
-	#####
-	#	Function to check if user is root
-	#	No arguments
-	#####
-
 	if [ "$(id | sed 's/uid=\([0-9]*\).*/\1/')" != "0" ]; then
 		error_exit "Vous devez etre superutilisateur pour faire tourner ce script."
 	fi
 }
 
 
-function cree_awstats()
-{
 #	Fonction pour creer et configurer les répertoires et fichiers de conf 
 #	nécessaires pour qu'awstatst tourne sur http://nom-domaine.tld/awstats
 #	avec un accès restreint pour l'user+pass unix
 #		3 arguments: $1 le nom de domaine, $2 login unix, $3 pass unix  
-
+function cree_awstats()
+{
     #apache doit pouvoir mettre a jour les logs pour awstats update en cron qui vide les logs
       touch ${REP_VHOSTS}/$1/logs/access_log
 #a tester mais en principe les 2 lignes suivantes sont pas obligés si appel de cette fct dans le process de crea de vhost...
@@ -261,12 +231,10 @@ function cree_awstats()
 ##### Initialization And Setup #####
 
 # Set file creation mask so that all files are created with 600 permissions.
-
 umask 066
 root_check
 
 # Trap TERM, HUP, and INT signals and properly exit
-
 trap "signal_exit TERM" TERM HUP
 trap "signal_exit INT"  INT
 
@@ -285,7 +253,7 @@ fi
 #les parametres ayant une valeur par defaut
 numero_defaut=999
 mysql_nb_defaut=1
-mysql_nb_defaut=1
+
 # pour les mots de passe on genere un pass a 10 caracteres aleatoire pour la valeur par defaut
 unix_pass_defaut=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c10`
 mysql_pass_defaut=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c10`
@@ -295,8 +263,7 @@ creer_awstats_defaut=non
 init_mutu_defaut=non
 
 
-
-#recuperation des valeurs passees par la ligne de commande
+##### recuperation des valeurs passees par la ligne de commande ##### 
 while getopts ":hd:n:u:x:s:p:b:q:m:i:a:" opt; do
 	case $opt in
 		d )	ndd=$OPTARG;;
@@ -319,7 +286,7 @@ while getopts ":hd:n:u:x:s:p:b:q:m:i:a:" opt; do
 	esac
 done
 
-#saisie interactive des parametres absents de la ligne de commande
+##### saisie interactive des parametres absents de la ligne de commande #####
 if [ -z $ndd ]; then
 	echo -n "Nom de domaine: "
     read reponse
@@ -392,6 +359,7 @@ if [ -z $mysql_nb ]; then
     	mysql_nb=$mysql_nb_defaut
     fi	
 fi
+
 # si plusieurs bases demandees ajouter le _ a la fin de $mysql_base
 if [ $mysql_nb != 1 ]; then
   mysql_base=$mysql_base'_'
@@ -405,6 +373,8 @@ if [ -z $mail_respons ]; then
 	 	mail_respons=$unix_user'@'$ndd
 	fi
 fi
+
+# creer instance d'awstats?
 if [ -z $creer_awstats ]; then
 	echo -n "Activer awstats pour ce domaine (oui|non)) [$creer_awstats_defaut]: "
     read reponse
@@ -414,17 +384,20 @@ if [ -z $creer_awstats ]; then
     	creer_awstats=$creer_awstats_defaut
     fi	
 fi
-#if [ -z $init_mutu ]; then
-#	echo -n "Creer une instance de mutu de SPIP (oui|non)) [$init_mutu_defaut]: "
-#    read reponse
-#    if [ -n "$reponse" ]; then
-#        init_mutu=$reponse
-#    else
-#    	init_mutu=$init_mutu_defaut
-#    fi	
-#fi
 
-#verification des parametres
+# creer instance de mutu SPIP?
+if [ -z $init_mutu ]; then
+	echo -n "Creer une instance de mutu de SPIP (oui|non)) [$init_mutu_defaut]: "
+    read reponse
+    if [ -n "$reponse" ]; then
+        init_mutu=$reponse
+    else
+    	init_mutu=$init_mutu_defaut
+    fi	
+fi
+
+
+##### verification des parametres #####
   echo "$0 lance avec les parametres suivants: " 
 	echo "ndd=           $ndd" 
  	echo "numero=        $numero" 
@@ -436,7 +409,7 @@ fi
   echo "mysql_nb=      $mysql_nb"
 	echo "mail_respons=  $mail_respons"
 	echo "crer_awstats=	 $creer_awstats"
-#	echo "init_mutu=	 $init_mutu"
+	echo "init_mutu=	 $init_mutu"
 	echo -n "Lancer la creation du vhost? (oui|non) [oui]: "
   read reponse
   if [[ $reponse = "non" ]]; then
@@ -446,7 +419,7 @@ fi
 #graceful_exit
 
   	
-# creer l'unix_user
+##### creer l'unix_user #####
 	# verifier que le compte n'existe pas deja
 	if ! grep -q -w $unix_user /etc/passwd ; then
 		#recup le mot de passe crypte
@@ -460,10 +433,10 @@ fi
 	fi
 
 
-# creation du vhost
+##### creation du vhost #####
 	#creer le fichier de conf du vhost a partir du modele 0X_nom_domaine.tld.conf
 	#on utilise sed pour generer la copie avec remplacements des nom_domaine.tld par la valeur passee en param -d
-  #pour remplacement des parametres du serveur par les constantes
+  #et pour remplacement des parametres du serveur par les variables definies pour *ce* serveur
 if [ ! -f $REP_STOCKAGE/$numero"_"$ndd.conf ]; then
 	sed -e "s/nom_domaine.tld/$ndd/g" \
     -e "s/rep_vhost/$REP_VHOSTS_ECHAP/g" \
@@ -500,7 +473,7 @@ fi
 
 ##### Bases MySQL: generer le fichier de commandes MySQL puis le jouer #####
 
-#les fonctions qui generent les commandes mysql dynamiquement
+##les fonctions qui generent les commandes mysql dynamiquement
 
 function cree_user()
 {
@@ -509,11 +482,7 @@ function cree_user()
 
 function cree_base()
 {
-#	if [ -z $1 ]; then
-  		echo CREATE DATABASE IF NOT EXISTS $mysql_base$1 \;
-#	else
-#		echo CREATE DATABASE IF NOT EXISTS $mysql_base \;
-#	fi
+	echo CREATE DATABASE IF NOT EXISTS $mysql_base$1 \;
 	echo REPLACE INTO mysql.db \(
   	echo         Host,Db,User,
   	echo         Select_priv,Insert_priv,Update_priv,Delete_priv,
@@ -533,7 +502,7 @@ function flush_privileges
   	echo "exit"
 }
 
-#maintenant qu'on a les fonctions, preparer le fichier toto.sql
+##maintenant qu'on a les fonctions, preparer le fichier toto.sql
 #creation de l'user MySQL
   cree_user > toto.sql
 
@@ -553,11 +522,11 @@ function flush_privileges
 #recharger les privileges pour que les modifs prennent effet
   flush_privileges >> toto.sql
 
-#lancer le fichier de commandes MySQL: toto.sql: 
+##lancer le fichier de commandes MySQL: toto.sql: 
   mysql -u $USER_MYSQL --password=$PASS_MYSQL mysql < toto.sql
 
 
-##### le memo #####
+##### creation du memo #####
 #creer le fichier txt avec tous les parametres pour envoi par mail
 function creer_memo()
 {
@@ -601,7 +570,7 @@ function creer_memo()
   creer_memo > $REP_STOCKAGE/memo"_"$numero"_"$ndd.txt
 
 
-##### creation du SPIP mutu si necessaire #####
+##### lancement de la creation du SPIP mutu si necessaire #####
     if [[ $init_mutu = "oui" ]]; then
     	echo Lancement du script de creation du SPIP mutu
 		  if [ $mysql_nb != 1 ]; then
