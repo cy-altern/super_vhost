@@ -39,8 +39,7 @@
 	PROGNAME=$(basename $0)
 	VERSION="0.1.0"
   
-  # IP du serveur et mail admin
-  IP_SERVEUR="123.123.123.123"
+  # mail admin
   MAIL_SERVEUR_ADMIN="truc@mondomaine.org"
   
   # user qui fait tourner apache (www-data pour un serveur sous Debian)
@@ -440,7 +439,6 @@ fi
 if [ ! -f $REP_STOCKAGE/$numero"_"$ndd.conf ]; then
 	sed -e "s/nom_domaine.tld/$ndd/g" \
     -e "s/rep_vhost/$REP_VHOSTS_ECHAP/g" \
-    -e "s/ip_serveur/$IP_SERVEUR/g" \
     -e "s/mail_serveur_admin/$MAIL_SERVEUR_ADMIN/g" 0X_nom_domaine.tld.conf >$REP_STOCKAGE/$numero"_"$ndd.conf
  	cp $REP_STOCKAGE/$numero"_"$ndd.conf ${REP_APACHE_CONF}/$numero"_"$ndd.conf
  	chmod 0644 ${REP_APACHE_CONF}/$numero"_"$ndd.conf
