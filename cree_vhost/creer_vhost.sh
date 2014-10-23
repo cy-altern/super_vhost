@@ -59,6 +59,10 @@
   REP_STOCKAGE="/home/clem/stocks_vhosts"
   # l'user linux proprio de ce repertoire
   USER_STOCKAGE="clem"
+  # le groupe associe au rep de stockage
+  GROUPE_STOCKAGE="admins"
+  # les droits (octal) a mettre sur les fichiers du rep de stockage
+  DROITS_STOCKAGE="660"
   
   # l'utilisateur MySQL qui cree les nouvelles bases et les utilisateurs
   # doit avoir les privileges create_priv et reload_priv sur le serveur MySQL
@@ -580,7 +584,11 @@ function creer_memo()
 
 
 ##### finitions, nettoyage et sortie propre #####
-  chown -R $USER_STOCKAGE $REP_STOCKAGE/
+# mettre proprio, groupe et droits sur les fichiers memo et conf crees
+  chown $USER_STOCKAGE:$GROUPE_STOCKAGE $REP_STOCKAGE/memo"_"$numero"_"$ndd.txt $REP_STOCKAGE/$numero"_"$ndd.conf
+  chmod $DROITS_STOCKAGE $REP_STOCKAGE/memo"_"$numero"_"$ndd.txt $REP_STOCKAGE/$numero"_"$ndd.conf
+
+# supprimer le fichier de commandes MySQL
   rm toto.sql
 
     
